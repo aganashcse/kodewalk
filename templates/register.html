@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+    {% block content %}
+    <!-- inner-banner -->
+<section class="inner-banner" id="home">
+    <div class="inner-layer">
+      <div class="container">
+      </div>
+    </div>
+  </section>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 col-md-offset-4" style="margin-left: auto; margin-right: auto;">
+                <div class="login-panel panel panel-default">
+                    <div class="panel-heading"><br/>
+                        <h4 class="panel-title">Please Register :</h4>
+                    </div><br/>
+                    <div class="panel-body">
+                        <form role="form" method="POST" action="/register">
+                            <fieldset>
+                                    <div class="form-group">
+                                            <!-- User Name -->
+                                            <div class="controls">
+                                              <input type="text" id="uname" name="uname" placeholder="User Name(optional)" class="form-control" default="">
+                                            </div>
+                                          </div>
+                                      <div class="form-group">
+                                        <!-- E-mail -->
+                                        <div class="controls">
+                                          <input type="email" id="email" name="email" placeholder="E-mail" class="form-control" required>
+                                        </div>
+                                      </div>
+                                      <div class="form-group">
+                                        <!-- Password-->
+                                        <div class="controls">
+                                          <input type="password" id="passwd" name="passwd" placeholder="Password(20 Chars Max)" class="form-control" required>
+                                          </div>
+                                      </div>
+                                      <div class="form-group">
+                                            <!-- Re-Enter Password-->
+                                            <div class="controls">
+                                              <input type="password" id="re_passwd" name="re_passwd" placeholder="Re-Enter Password" class="form-control" required>
+                                              </div>
+                                          </div>
+                                <button class="btn btn-lg btn-success btn-block" type="submit">Register</button>
+                                <br/>
+                                <p style="color: red;">{{ msg }}
+                                </p>
+                                <input type="hidden" id="arg" name="arg" value="{{arg}}"/>
+                            </fieldset>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}

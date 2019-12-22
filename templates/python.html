@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+    {% block content %}
+    <!-- inner-banner -->
+<section class="inner-banner" id="home" style="max-height: 100px;">
+	<div class="inner-layer">
+		<div class="container">
+		</div>
+	</div>
+</section>
+<!-- //inner-banner -->
+    <!-- breadcrumb -->
+<div class="breadcrumb-w3pvt bg-light">
+	<div class="container">
+	<nav aria-label="breadcrumb">
+		<ol class="breadcrumb">
+			<li class="breadcrumb-item">
+				<a href="/dashboard">Practice</a>
+			</li>
+			<li class="breadcrumb-item" aria-current="page">Python</li>
+		</ol>
+    </nav>
+                <div class="list-group">
+                    {% for task in tasks_list %}
+                    <a href="/task/{{task['title']}}" class="list-group-item list-group-item-action">
+                            <div class="col-18 mt-lg-10 grid">
+                                    <h3>{{task['title']}}</h3>
+                                    <p class="mt-2">{{task['desc']}}</p>
+                                    <span class="mt-2">Solved: {{task['solved']}}%</span>&nbsp;
+                                    <span class="mt-2">Difficulty: {{task['difficulty']}}</span>
+                                </div>
+                    </a>
+                    <br/>
+                    {% endfor %}
+                  </div>
+        
+	</div>
+</div>
+
+<!-- //breadcrumb -->
+    {% endblock %}

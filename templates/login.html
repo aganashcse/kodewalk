@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+    {% block content %}
+    <!-- inner-banner -->
+<section class="inner-banner" id="home" style="max-height: 100px;">
+	<div class="inner-layer">
+		<div class="container">
+		</div>
+	</div>
+</section>
+<!-- //inner-banner -->
+    <!-- breadcrumb -->
+<div class="breadcrumb-w3pvt bg-light">
+	<div class="container">
+	<nav aria-label="breadcrumb">
+		<ol class="breadcrumb">
+			<li class="breadcrumb-item">
+				<a href="/">Home</a>
+			</li>
+			<li class="breadcrumb-item" aria-current="page">Login</li>
+		</ol>
+    </nav>
+    <div class="panel-body" style="width: 35%; margin-left: auto; margin-right: auto;">
+        <form role="form" method="POST" action="/login">
+            <fieldset>
+                <div class="form-group">
+                    <input class="form-control" placeholder="E-mail" name="email" type="email" autofocus required>
+                </div>
+                <div class="form-group">
+                    <input class="form-control" placeholder="Password" name="passwd" type="password" value="" required>
+                </div>
+                <div class="checkbox">
+                    <label>
+                        <input name="remember" type="checkbox" value="Remember Me">Remember Me
+                    </label>
+                </div>
+                <button class="btn btn-lg btn-success btn-block" type="submit">Login</button>
+                <br/>
+                <p><a href="/register" ><strong>click here</strong></a> to register, If you are new here!</p>
+                <br/>
+                <p style="color: red;">{{ msg }}
+                </p>
+                <input type="hidden" id="arg" name="arg" value="{{arg}}"/>
+            </fieldset>
+        </form>
+<br/><br/><br/><br/><br/><br/><br/><br/><br/>
+    </div>
+	</div>
+</div>
+<!-- //breadcrumb -->
+    {% endblock %}

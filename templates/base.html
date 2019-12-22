@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>CodeWalk</title>
+<!-- for-mobile-apps -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="keywords" content="tutorials, code battle, code war, code learning, learning code" />
+
+    <script>
+        addEventListener("load", function () {
+            setTimeout(hideURLbar, 0);
+        }, false);
+
+        function hideURLbar() {
+            window.scrollTo(0, 1);
+        }
+    </script>
+	
+	<!-- css files -->
+    <link href="{{ url_for('static', filename='css/css_slider.css')}}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap.css')}}" rel="stylesheet" type='text/css'><!-- bootstrap css -->
+	<link href="{{ url_for('static', filename='css/style.css')}}" rel='stylesheet' type='text/css' /><!-- custom css -->
+	<link href="{{ url_for('static', filename='css/font-awesome.min.css')}}" rel="stylesheet"><!-- fontawesome css -->
+    <!-- //css files -->
+    <!-- js files-->
+    <script type="text/javascript" src="{{ url_for('static', filename='js/custom_js.js')}}"></script>
+    <!-- //js files-->
+</head>
+<body>
+<!-- header -->
+<header>
+	<div class="container">
+		<!-- nav -->
+		<nav class="py-3 d-lg-flex">
+			<div id="logo">
+				<h1> <a href="/"><span class="fa fa-code-fork fa-lg"></span> CodeWalk </a></h1>
+			</div>
+			<label for="drop" class="toggle"><span class="fa fa-bars"></span></label>
+			<input type="checkbox" id="drop" />
+			<ul class="menu ml-auto mt-1">
+				<!--<li class=""><a href="#">Services</a></li>-->
+				<li class="last-grid"><a href="#" id="contact_modal_btn">Contact</a></li>
+                    {% if current_user.is_authenticated %}
+                    <li class="last-grid dropdown">
+                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{current_user.id}}<span class="caret"></span></a>
+                        <ul class="dropdown-menu" role="menu" style="margin-right: auto;">
+                                <li><a class="li-in-li" href="/logout">Logout</a></li>
+                             </ul>
+                    </li>
+                                {% else %}
+                                <li class="last-grid dropdown">
+                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Login <span class="caret"></span></a>
+                                     <ul class="dropdown-menu" role="menu">
+                                        <li><a class="li-in-li" href="/login">User</a></li>
+                                        <li><a class="li-in-li" href="/login_admin">Admin</a></li>
+                                     </ul>
+                                 </li>
+                                {% endif %}
+			</ul>
+			<!--contact modal-->
+			<div id="myModal" class="modal">
+					<!-- Modal content -->
+					<div class="modal-content">
+						<!--Header-->
+						<div class="modal-header">
+								<h4 class="modal-title" id="myModalLabel">Contact Info</h4>
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+								  <span aria-hidden="true">×</span>
+								</button>
+							  </div>
+					<div>
+					  <p>
+						  <span class="fa mr-1 fa-phone"></span><a style="color: black;">+91 80569 20791</a></br>
+						  <span class="fa mr-1 fa-envelope"></span><a style="color: black;" href="mailto:aganashcse@gmail.com">aganashcse@gmail.com</a>
+					  </p>
+					</div>
+				</div>
+			</div>
+			<!--contact modal ends-->
+		</nav>
+		<!-- //nav -->
+	</div>
+</header>
+<!-- //header -->
+        {% block content %}
+        {% endblock %}
+    <!-- copyright -->
+<section class="copy-right">
+	<div class="container">
+		<div class="row">
+			<div class="col-lg-7">
+				<p>© 2019 Demand. All rights reserved | Design by
+					<a href="http://ganesha.cloud"> Ganesha.</a>
+				</p>
+			</div>
+			<div class="col-lg-5">
+				<ul class="list-w3 d-sm-flex">
+					<li>
+						<a href="#">
+							Privicy Policy
+						</a>
+					</li>
+					<li class="mx-4">
+						<a href="#">
+							Terms & Conditions
+						</a>
+					</li>
+					<li>
+						<a href="#">
+							Disclaimer.
+						</a>
+					</li>
+					<li>
+						<a href="#">
+						</a>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+</section>
+<!-- //copyright -->
+
+<!--modal script for contact-->
+<script>
+		var modal = document.getElementById("myModal");
+		var btn = document.getElementById("contact_modal_btn");
+		// Get the <span> element that closes the modal
+		var span = document.getElementsByClassName("close")[0];
+		// When the user clicks the button, open the modal
+		btn.onclick = function() {
+		  modal.style.display = "block";
+		}
+		// When the user clicks on <span> (x), close the modal
+		span.onclick = function() {
+		  modal.style.display = "none";
+		}
+		// When the user clicks anywhere outside of the modal, close it
+		window.onclick = function(event) {
+		  if (event.target == modal) {
+			modal.style.display = "none";
+		  }
+		}
+		</script>
+</body>
+</html>

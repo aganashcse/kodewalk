@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+    {% block content %}
+    <!-- inner-banner -->
+<section class="inner-banner" id="home" style="max-height: 100px;">
+	<div class="inner-layer">
+		<div class="container">
+		</div>
+	</div>
+</section>
+<!-- //inner-banner -->
+    <!-- breadcrumb -->
+    <div class="breadcrumb-w3pvt bg-light">
+            <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="/dashboard">Practice</a>
+                    </li>
+                    <li class="breadcrumb-item" aria-current="page">
+                            <a href="/python">Python</a>
+                    </li>
+                    <li class="breadcrumb-item" aria-current="page">
+                            <a href="#">{{task['title']}}</a>
+                    </li>
+                </ol>
+            </nav>
+            <div class="row">
+                    <div class="column" style="float: left; width: 70%;">
+                            <div class="row">
+                                <div class="col-9"><h4>Task:</h4></div>
+                                <div class="col-3"><h5><a href="/comment">Comments</a></h5></div>
+                            </div>
+                <div class="progress-one my-lg-4">
+                        <div class="col-18 mt-lg-10 grid">
+                                <h3>{{task['title']}}</h3>
+                                <p class="mt-2">{{task['desc']}}</p>
+                            </div>
+                        <div class="col-18 mt-lg-10 grid">
+                                <h6>input:</h6>
+                                <p class="mt-2">{{task['input_format']}}</p>
+                            </div>
+                        <div class="col-18 mt-lg-10 grid">
+                                <h6>output:</h6>
+                                <p class="mt-2">{{task['output_format']}}</p>
+                            </div>
+                      </div>
+                      {% for example_key in task['examples'].keys()|sort %}
+                    <div class="progress-one my-lg-4">
+                        <div class="col-18 mt-lg-10 grid">
+                                <h3>{{example_key}}</h3>
+                                </div>
+                        <div class="col-18 mt-lg-10 grid">
+                                <h6>input:</h6>
+                                <p class="mt-2">{{task['examples'][example_key]['input']}}</p>
+                            </div>
+                        <div class="col-18 mt-lg-10 grid">
+                                <h6>output:</h6>
+                                <p class="mt-2">{{task['examples'][example_key]['output']}}</p>
+                            </div>
+                      </div>
+                      {% endfor %}
+                      <form role="form" method="POST" action="/submit" id="submit_form">
+                        <fieldset>
+                      <div class="form-group  sub-meta">
+                            <label for="code">Type your code:</label><span style="float: right;">python3</span>
+                            <textarea class="form-control" rows="7" name="code" id="code" onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}">
+                            </textarea>
+                            <input type="hidden" id="script_template" name="script_template" value="{{script_template}}">
+                            <input type="hidden" id="task_tit" name="task_tit" value="{{task['title']}}"/>
+                          </div>
+                        </fieldset>
+                    <fieldset>
+                        <div class="row form-group">
+                            <div class="column" style="float: left; width: 85%;"></div>
+                            <div class="column" style="float: right; width: 10%;">
+                                <!--<a href="#" class="btn btn-banner my-sm-3" style="margin-right: 0px; color: black;">Run code</a>-->
+                                <a href="javascript:void()" onclick="document.getElementById('submit_form').submit();" class="btn btn-banner1 my-sm-3" style="float: right; padding: 2px;">Submit code</a>
+                            </div>
+                    </div>
+                    
+                </fieldset>
+            </form>
+                </div>
+                <div class="column" style="width: 5%;"></div>
+                <div  class="column" style="float: right; width: 25%;">
+                    <h4 style="padding: 10px;">Submissions:</h4>
+                        <ul class="list-group">
+                                <li class="list-group-item sub-meta"><a href="/submission1" style="display: block;">
+                                    Try1
+                                    <span style="float: right;">08:01:00</span></a>
+                                </li>
+                              </ul>
+                </div>
+                </div>
+        </div>
+        </div>
+        <!-- Nav tabs -->
+{% endblock %}
