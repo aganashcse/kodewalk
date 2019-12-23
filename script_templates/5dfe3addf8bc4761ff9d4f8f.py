@@ -1,3 +1,8 @@
 def add(a,b):
-    #On to you from here
-    #result must be this function's return
+    #on to you now
+
+if __name__ == '__main__':
+    a = int(raw_input())
+    b = int(raw_input())
+    result = add(a,b)
+    print(result)

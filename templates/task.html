@@ -63,7 +63,7 @@
                         <fieldset>
                       <div class="form-group  sub-meta">
                             <label for="code">Type your code:</label><span style="float: right;">python3</span>
-                            <textarea class="form-control" rows="7" name="code" id="code" onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+'\t'+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}">
+                            <textarea class="form-control" rows="7" name="code" id="code" onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+' '+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}">
                             </textarea>
                             <input type="hidden" id="script_template" name="script_template" value="{{script_template}}">
                             <input type="hidden" id="task_tit" name="task_tit" value="{{task['title']}}"/>
@@ -80,6 +80,54 @@
                     
                 </fieldset>
             </form>
+            <div class="progress-one my-lg-4">
+                    {% if error %}
+                    <div class="col-18 mt-lg-10 grid">
+                            <h3 style="color: red;">Error! :-(</h3>
+                            </div>
+                    <div class="col-18 mt-lg-10 grid">
+                        <h6 style="color: red;">{{error}}</h6>
+                        <p class="mt-2">Please debug the issue and re-submit</p>
+                    </div>
+                    {% else %}
+                    {% if pass_rate==100 %}
+                    <div class="col-18 mt-lg-10 grid">
+                            <h3 style="color: green;">Passed! :-)</h3><br/>
+                            </div>
+                    <div class="col-18 mt-lg-10 grid">
+                        <h6 style="color: green;">Congratulations!! your code passed {{pass_rate}}%</h6>
+                        <p class="mt-2">Recommended to explore more tasks to develop skills</p>
+                    </div>
+                        {% endif %}
+                        {% if (pass_rate|float < 100) and (pass_rate|float > 0) %}
+                    <div class="col-18 mt-lg-10 grid">
+                            <h3 style="color: yellowgreen;">Partially Passed! :-)</h3><br/>
+                            </div>
+                    <div class="col-18 mt-lg-10 grid">
+                        <h6 style="color: yellowgreen;">Nice try.. your code passed {{pass_rate}}%</h6>
+                        <p class="mt-2">Please check your logic and try again.</p>
+                    </div>
+                        {% endif %}
+                        {% if (pass_rate|float == 0) %}
+                    <div class="col-18 mt-lg-10 grid">
+                            <h3 style="color: rgb(205, 81, 50);">Something not right! :-)</h3><br/>
+                            </div>
+                    <div class="col-18 mt-lg-10 grid">
+                        <h6 style="color: rgb(205, 81, 50);">Need some more effor{{pass_rate}}%</h6>
+                        <p class="mt-2">Please check your logic and try again.</p>
+                    </div>
+                        {% endif %}
+                    {% endif %}
+                    {% if script_blocked %}
+                    <div class="col-18 mt-lg-10 grid">
+                            <h3 style="color: red;">Warning!! :-(</h3>
+                            </div>
+                    <div class="col-18 mt-lg-10 grid">
+                        <h6 style="color: red;">Please don't use {{blocked_scripts}} keywords!</h6>
+                        <p class="mt-2">The above keywords are blockded. Please crack the logic without using them</p>
+                    </div>
+                    {% endif %}
+                    </div>
                 </div>
                 <div class="column" style="width: 5%;"></div>
                 <div  class="column" style="float: right; width: 25%;">
