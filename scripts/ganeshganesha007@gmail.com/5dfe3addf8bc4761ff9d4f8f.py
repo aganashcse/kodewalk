@@ -1,6 +1,6 @@
 def add(a,b):
     #on to you now
-    return a
+    return a+b
 
 if __name__ == '__main__':
     a = int(raw_input())

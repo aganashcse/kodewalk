@@ -2,16 +2,27 @@ from __future__ import division
 from flask import Flask, render_template, request, session, redirect, url_for
 from pymongo import MongoClient
 from bson.objectid import ObjectId
+from flask_mail import Mail, Message
+from random import randint
 import subprocess
 import flask_login
 import os
 
 app = Flask(__name__)
+app.config["MAIL_SERVER"]='smtp.gmail.com'  
+app.config["MAIL_PORT"] = 465     
+app.config["MAIL_USERNAME"] = 'flask.ganesh@gmail.com'
+app.config['MAIL_PASSWORD'] = 'slmvveqoktmewnyf'
+app.config['MAIL_USE_TLS'] = False  
+app.config['MAIL_USE_SSL'] = True  
+
 client = MongoClient('mongodb://localhost:27017/')
-db = client.codewalk
+db = client.kodewalk
 login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
 user = ''
+mail = Mail(app)
+otp = randint(000000,999999)
 SCRIPT_TEMPLATE_FOLDER = os.path.dirname(os.path.abspath(__file__)) + '/script_templates/'
 USER_SCRIPT_FOLDER = os.path.dirname(os.path.abspath(__file__)) + '/scripts/'
 BLOCKED_SCRIPTS = ['import', 'eval', 'from']
@@ -45,15 +56,18 @@ def index():
     return render_template('index.html')
 
 @app.route('/dashboard', methods=['GET', 'POST'])
+@flask_login.login_required
 def dashboard():
     return render_template('dashboard.html')
 
 @app.route('/python', methods=['GET', 'POST'])
+@flask_login.login_required
 def python():
     tasks = list(db.tasks.find().sort('date',-1))
     return render_template('python.html', tasks_list=tasks)
 
 @app.route('/task/<string:task_title>', methods=['GET', 'POST'])
+@flask_login.login_required
 def task(task_title):
     task = list(db.tasks.find({"title":task_title}))[0]
     print('title:', task_title)
@@ -67,6 +81,7 @@ def task(task_title):
         pass_rate=session['pass_rate'], error=session['error'], blocked_scripts=', '.join(BLOCKED_SCRIPTS))
 
 @app.route('/submit', methods=['GET', 'POST'])
+@flask_login.login_required
 def submit():
     code_lines = request.form['code']
     task_title = request.form['task_tit']
@@ -139,10 +154,24 @@ def register():
             #handling if user(s) already exists
             for _ in db.users.find(email_dict):
                 return render_template('register.html', msg = 'Email already used!!!')
-            db.users._insert(session['user_info'])
-            return render_template('login.html', msg = 'Registered Successfully! Please login')
+            msg = Message('LikeBuds Account Verification', sender = app.config["MAIL_USERNAME"], recipients = [session['email']])  
+            msg.body = str(otp)  
+            mail.send(msg)
+            return redirect(url_for('validate'))
         else:
             return render_template('register.html', msg = 'Password Doesn\'t matching!!!')
+
+@app.route('/validate',methods=['GET', "POST"])
+def validate():
+    if request.method == 'GET':
+        return render_template('validate_email.html')
+    user_otp = request.form['otp']
+    print("otps:{},{}".format(user_otp, otp))
+    if otp == int(user_otp):
+        db.users._insert(session['user_info'])
+        print("redirecting to login.html")
+        return render_template('login.html', msg = 'Registered Successfully! Please login')
+    return render_template('validate_email.html', msg = 'OTP doesnot Matching!!!')
 
 @app.route('/logout', methods=['GET', 'POST'])
 @flask_login.login_required
@@ -153,4 +182,4 @@ def logout():
 
 if __name__ == '__main__':
     app.secret_key="afdoijaw23409aoj()_)(&%#$%)"
-    app.run(debug=True, use_reloader=False)
+    app.run(debug=True, use_reloader=False, port=80, host='0.0.0.0')

@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+    {% block content %}
+    <!-- inner-banner -->
+<section class="inner-banner" id="home" style="max-height: 100px;">
+        <div class="inner-layer">
+            <div class="container">
+            </div>
+        </div>
+    </section>
+    <!-- //inner-banner -->
+        <!-- breadcrumb -->
+    <div class="breadcrumb-w3pvt bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="panel-body col-md-5" style="width: 90%; margin-left: auto; margin-right: auto;">
+                <div class="login-panel panel panel-default">
+                    <div class="panel-heading">
+                            <br/>
+                        <h3 class="panel-title">LikeBuds Account verification</h3>
+                    </div>
+                    <div class="panel-body">
+                        <p>OTP has been sent to your E-Mail Address!</p>
+                        <form role="form" method="POST" action="/validate">
+                            <fieldset>
+                                <div class="form-group">
+                                    <input class="form-control" placeholder="Please Enter  your OTP to verify" name="otp" type="text" autofocus required>
+                                </div>
+                                <button class="btn btn-lg btn-success btn-block" type="submit">Register</button>
+                                <br/>
+                                <p><a href="/register" ><strong>click here</strong></a> to register, If you are new here!</p>
+                                <br/>
+                                <p style="color: red;">{{ msg }}
+                                </p>
+                                <input type="hidden" id="arg" name="arg" value="{{arg}}"/>
+                            </fieldset>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    {% endblock %}

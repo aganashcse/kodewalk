@@ -28,8 +28,8 @@
                     <div class="column" style="float: left; width: 70%;">
                             <div class="row">
                                 <div class="col-9"><h4>Task:</h4></div>
-                                <div class="col-3"><h5><a href="/comment">Comments</a></h5></div>
-                            </div>
+                                <div class="col-3"><h5><a href="" onclick="not_developed_alert()">Comments</a></h5></div>
+                            </div><br/>
                 <div class="progress-one my-lg-4">
                         <div class="col-18 mt-lg-10 grid">
                                 <h3>{{task['title']}}</h3>
@@ -62,12 +62,13 @@
                       <form role="form" method="POST" action="/submit" id="submit_form">
                         <fieldset>
                       <div class="form-group  sub-meta">
-                            <label for="code">Type your code:</label><span style="float: right;">python3</span>
-                            <textarea class="form-control" rows="7" name="code" id="code" onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+' '+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}">
-                            </textarea>
+                            <label for="code">Type your code:</label><span style="float: right;">python2.7</span>
+                            <!--<textarea class="form-control" rows="7" name="code" id="code" onkeydown="if(event.keyCode===9){var v=this.value,s=this.selectionStart,e=this.selectionEnd;this.value=v.substring(0, s)+' '+v.substring(e);this.selectionStart=this.selectionEnd=s+1;return false;}">
+                            </textarea>-->
                             <input type="hidden" id="script_template" name="script_template" value="{{script_template}}">
                             <input type="hidden" id="task_tit" name="task_tit" value="{{task['title']}}"/>
                           </div>
+                          <textarea class="codemirror-textarea" name="code" id="code"></textarea>
                         </fieldset>
                     <fieldset>
                         <div class="row form-group">
@@ -110,10 +111,10 @@
                         {% endif %}
                         {% if (pass_rate|float == 0) %}
                     <div class="col-18 mt-lg-10 grid">
-                            <h3 style="color: rgb(205, 81, 50);">Something not right! :-)</h3><br/>
+                            <h3 style="color: rgb(205, 81, 50);">Something not right! :-(</h3><br/>
                             </div>
                     <div class="col-18 mt-lg-10 grid">
-                        <h6 style="color: rgb(205, 81, 50);">Need some more effor{{pass_rate}}%</h6>
+                        <h6 style="color: rgb(205, 81, 50);">Need some more effort. Pass rate is: {{pass_rate}}%</h6>
                         <p class="mt-2">Please check your logic and try again.</p>
                     </div>
                         {% endif %}
@@ -131,9 +132,10 @@
                 </div>
                 <div class="column" style="width: 5%;"></div>
                 <div  class="column" style="float: right; width: 25%;">
+                    <br/>
                     <h4 style="padding: 10px;">Submissions:</h4>
                         <ul class="list-group">
-                                <li class="list-group-item sub-meta"><a href="/submission1" style="display: block;">
+                                <li class="list-group-item sub-meta"><a href="" onclick="not_developed_alert()" style="display: block;">
                                     Try1
                                     <span style="float: right;">08:01:00</span></a>
                                 </li>

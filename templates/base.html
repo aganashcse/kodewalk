@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<title>CodeWalk</title>
+<title>KodeWalk</title>
 <!-- for-mobile-apps -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -21,11 +21,10 @@
     <link href="{{ url_for('static', filename='css/css_slider.css')}}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/bootstrap.css')}}" rel="stylesheet" type='text/css'><!-- bootstrap css -->
 	<link href="{{ url_for('static', filename='css/style.css')}}" rel='stylesheet' type='text/css' /><!-- custom css -->
-	<link href="{{ url_for('static', filename='css/font-awesome.min.css')}}" rel="stylesheet"><!-- fontawesome css -->
+    <link href="{{ url_for('static', filename='css/font-awesome.min.css')}}" rel="stylesheet"><!-- fontawesome css -->
+    <link href="{{ url_for('static', filename='plugin/codemirror/lib/codemirror.css')}}" rel="stylesheet"><!-- codemirror css -->
+
     <!-- //css files -->
-    <!-- js files-->
-    <script type="text/javascript" src="{{ url_for('static', filename='js/custom_js.js')}}"></script>
-    <!-- //js files-->
 </head>
 <body>
 <!-- header -->
@@ -34,7 +33,7 @@
 		<!-- nav -->
 		<nav class="py-3 d-lg-flex">
 			<div id="logo">
-				<h1> <a href="/"><span class="fa fa-code-fork fa-lg"></span> CodeWalk </a></h1>
+				<h1> <a href="/"><img src="{{ url_for('static', filename='images/KodeWalk.png')}}"></a></h1>
 			</div>
 			<label for="drop" class="toggle"><span class="fa fa-bars"></span></label>
 			<input type="checkbox" id="drop" />
@@ -43,18 +42,22 @@
 				<li class="last-grid"><a href="#" id="contact_modal_btn">Contact</a></li>
                     {% if current_user.is_authenticated %}
                     <li class="last-grid dropdown">
-                        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{current_user.id}}<span class="caret"></span></a>
-                        <ul class="dropdown-menu" role="menu" style="margin-right: auto;">
-                                <li><a class="li-in-li" href="/logout">Logout</a></li>
-                             </ul>
+                        <a href="/logout" role="button" aria-expanded="false"><span class="caret">Logout</span></a>
+                        <!--<ul class="dropdown-menu" role="menu" style="margin-right: auto;">
+                                <li><a class="li-in-li" href="/logout"></a></li>
+                             </ul>-->
                     </li>
                                 {% else %}
                                 <li class="last-grid dropdown">
-                                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Login <span class="caret"></span></a>
+                                        <a href="/login" role="button" aria-expanded="false">User Login <span class="caret"></span></a>
+                                    <!--<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Login <span class="caret"></span></a>
                                      <ul class="dropdown-menu" role="menu">
                                         <li><a class="li-in-li" href="/login">User</a></li>
                                         <li><a class="li-in-li" href="/login_admin">Admin</a></li>
-                                     </ul>
+                                     </ul>-->
+                                 </li>
+                                 <li class="last-grid dropdown">
+                                        <a href="" role="button" aria-expanded="false" onclick="not_developed_alert()">Admin Login <span class="caret"></span></a>
                                  </li>
                                 {% endif %}
 			</ul>
@@ -83,6 +86,11 @@
 	</div>
 </header>
 <!-- //header -->
+<div>
+        {% if current_user.is_authenticated %}
+       <strong> Hello {{current_user.id.split('@')[0]}}!</strong>
+        {% endif %}
+    </div>
         {% block content %}
         {% endblock %}
     <!-- copyright -->
@@ -121,7 +129,11 @@
 	</div>
 </section>
 <!-- //copyright -->
-
+<!-- js files-->
+<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.min.js')}}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='plugin/codemirror/lib/codemirror.js')}}"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='js/custom_js.js')}}"></script>
+<!-- //js files-->
 <!--modal script for contact-->
 <script>
 		var modal = document.getElementById("myModal");
