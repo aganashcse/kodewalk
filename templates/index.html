@@ -18,7 +18,12 @@
 									 and most demanded in market
 								</p>
 								<a href="" class="btn btn-banner my-sm-3 mr-2"  onclick="not_developed_alert()">Read More</a>
+								{% if current_user.is_authenticated %}
+								<a href="/dashboard" class="btn btn-banner1 my-sm-3">Get Started</a>
+								{% else %}
 								<a href="/login" class="btn btn-banner1 my-sm-3">Get Started</a>
+								{% endif %}
+								
 							</div>
 						</li>
 						<li>

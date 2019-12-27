@@ -6,6 +6,7 @@ from flask_mail import Mail, Message
 from random import randint
 import subprocess
 import flask_login
+import pdb
 import os
 
 app = Flask(__name__)
@@ -25,7 +26,7 @@ mail = Mail(app)
 otp = randint(000000,999999)
 SCRIPT_TEMPLATE_FOLDER = os.path.dirname(os.path.abspath(__file__)) + '/script_templates/'
 USER_SCRIPT_FOLDER = os.path.dirname(os.path.abspath(__file__)) + '/scripts/'
-BLOCKED_SCRIPTS = ['import', 'eval', 'from']
+BLOCKED_SCRIPTS = ['import', 'eval', 'from', 'exec']
 
 class User(flask_login.UserMixin):
     pass
@@ -37,6 +38,9 @@ def user_loader(email):
     session['pass_rate'], session['error']=-1,""
     session['blocked'] = False
     return user
+
+def is_ascii(s):
+    return all(ord(c) < 128 for c in s)
 
 @app.after_request
 def after_request_func(response):
@@ -74,9 +78,13 @@ def task(task_title):
     script_template_file = open(SCRIPT_TEMPLATE_FOLDER + str(task['_id']) + '.py', 'r')
     processed_template = "".join(script_template_file.readlines())
     object_id = list(db.tasks.find({"title":task_title}))[0].get('_id')
-    if os.path.isfile(USER_SCRIPT_FOLDER+session['email']+"/"+str(object_id)+".py"):
-        script_file = open(USER_SCRIPT_FOLDER+session['email']+"/"+str(object_id)+".py", 'r')
+    user_object_id = list(db.users.find({"email":session['email']}))[0].get('_id')
+    if os.path.isfile(USER_SCRIPT_FOLDER+str(user_object_id)+"/"+str(object_id)+".py"):
+        script_file = open(USER_SCRIPT_FOLDER+str(user_object_id)+"/"+str(object_id)+".py", 'r')
         processed_template = "".join(script_file.readlines())
+        session['pass_rate'] = 0 if session['pass_rate']==-1 else session['pass_rate']
+    print("pass rate should be printed:",session['pass_rate'] )
+    print("code blocked", session['blocked'])
     return render_template('task.html', task=task, script_template = processed_template, script_blocked=session['blocked'],\
         pass_rate=session['pass_rate'], error=session['error'], blocked_scripts=', '.join(BLOCKED_SCRIPTS))
 
@@ -85,14 +93,20 @@ def task(task_title):
 def submit():
     code_lines = request.form['code']
     task_title = request.form['task_tit']
+    print("focus:",code_lines)
+    if not is_ascii(code_lines):
+        session['blocked'] = True
+        print("inside ascii")
+        return redirect(url_for('task', task_title=task_title))
     print('ss:', str(code_lines))
     if [True for item in BLOCKED_SCRIPTS if item in str(code_lines)]:
         session['blocked'] = True
         return redirect(url_for('task', task_title=task_title))
     object_id = list(db.tasks.find({"title":request.form['task_tit']}))[0].get('_id')
-    if not os.path.exists(USER_SCRIPT_FOLDER+session['email']):
-        os.mkdir(USER_SCRIPT_FOLDER+session['email'])
-    user_script_file = USER_SCRIPT_FOLDER+session['email']+"/"+str(object_id)+".py"
+    user_object_id = list(db.users.find({"email":session['email']}))[0].get('_id')
+    if not os.path.exists(USER_SCRIPT_FOLDER+str(user_object_id)):
+        os.mkdir(USER_SCRIPT_FOLDER+str(user_object_id))
+    user_script_file = USER_SCRIPT_FOLDER+str(user_object_id)+"/"+str(object_id)+".py"
     script_file_obj = open(user_script_file, 'w+')
     script_file_obj.write(code_lines)
     script_file_obj = open(user_script_file, 'r')
@@ -112,7 +126,7 @@ def execute_logic(object_id):
     pass_count = 0
     total_count = len(test_ip_op_dict['test_ip_op'].values())
     for test_ip_op in test_ip_op_dict['test_ip_op'].values():
-        process = subprocess.Popen("python "+user_script_file, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        process = subprocess.Popen("python "+user_script_file, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         test_input = '\n'.join(test_ip_op['input'])
         print('test_ip:', test_input)
         test_output = test_ip_op['output']

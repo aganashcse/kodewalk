@@ -68,7 +68,7 @@
                             <input type="hidden" id="script_template" name="script_template" value="{{script_template}}">
                             <input type="hidden" id="task_tit" name="task_tit" value="{{task['title']}}"/>
                           </div>
-                          <textarea class="codemirror-textarea" name="code" id="code"></textarea>
+                          <textarea class="codemirror-textarea" name="code" id="code" onKeyUp='check_ascii(this)'></textarea>
                         </fieldset>
                     <fieldset>
                         <div class="row form-group">
@@ -124,8 +124,8 @@
                             <h3 style="color: red;">Warning!! :-(</h3>
                             </div>
                     <div class="col-18 mt-lg-10 grid">
-                        <h6 style="color: red;">Please don't use {{blocked_scripts}} keywords!</h6>
-                        <p class="mt-2">The above keywords are blockded. Please crack the logic without using them</p>
+                        <h6 style="color: red;">Please don't use {{blocked_scripts}} keywords and non-ASCII keywords!</h6>
+                        <p class="mt-2">The above keywords are blocked. Please crack the logic without using them.</p>
                     </div>
                     {% endif %}
                     </div>
