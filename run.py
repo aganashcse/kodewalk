@@ -35,12 +35,16 @@ class User(flask_login.UserMixin):
 def user_loader(email):
     user = User()
     user.id = session['email']
-    session['pass_rate'], session['error']=-1,""
-    session['blocked'] = False
     return user
 
-def is_ascii(s):
-    return all(ord(c) < 128 for c in s)
+@app.before_request
+def before_request_callback():
+    session['pass_rate'] = session.get("pass_rate", -1)
+    session['error'] = session.get("error", "")
+    session['blocked'] = session.get("blocked", False)
+    session['sample_input_list'] = session.get('sample_input_list', "")
+    session['sample_output'] = session.get('sample_output', "")
+    session['user_output'] = session.get('user_output', "")
 
 @app.after_request
 def after_request_func(response):
@@ -59,14 +63,49 @@ def remove_id_key(list_of_dict):
 def index():
     return render_template('index.html')
 
+@app.route('/admin', methods=['GET', 'POST'])
+def admin_login():
+    session['admin_try'] = True
+    if request.method=='GET':
+        return render_template('login.html', msg = 'Only Admin users are allowed to login here! Please use \'user login\' if you are not admin')
+    session['email']=request.form['email']
+    email_dict = {"email": session['email']}
+    user = db.admin_users.find_one(email_dict)
+    if not user:
+        return render_template('login.html', msg = 'Email doesn\'t exists! Please contact us if you want to be admin user!')
+    if user['passwd'] != request.form['passwd']:
+        return render_template('login.html', msg = 'Password is incorrect!')
+    user = User()
+    user.id = session['email']
+    flask_login.login_user(user)
+    print("need to go admin")
+    return redirect(url_for('admin_page'))
+
+@app.route('/admin_page', methods=['GET', 'POST'])
+@flask_login.login_required
+def admin_page():
+    return render_template('admin.html')
+
 @app.route('/dashboard', methods=['GET', 'POST'])
 @flask_login.login_required
 def dashboard():
+    session['pass_rate'] = -1
+    session['error'] = ""
+    session['blocked'] = False
+    session['sample_input_list'] = ""
+    session['sample_output'] = ""
+    session['user_output'] = ""
     return render_template('dashboard.html')
 
 @app.route('/python', methods=['GET', 'POST'])
 @flask_login.login_required
 def python():
+    session['pass_rate'] = -1
+    session['error'] = ""
+    session['blocked'] = False
+    session['sample_input_list'] = ""
+    session['sample_output'] = ""
+    session['user_output'] = ""
     tasks = list(db.tasks.find().sort('date',-1))
     return render_template('python.html', tasks_list=tasks)
 
@@ -80,28 +119,28 @@ def task(task_title):
     object_id = list(db.tasks.find({"title":task_title}))[0].get('_id')
     user_object_id = list(db.users.find({"email":session['email']}))[0].get('_id')
     if os.path.isfile(USER_SCRIPT_FOLDER+str(user_object_id)+"/"+str(object_id)+".py"):
+        print("User script already exists, pass_rate:", session['pass_rate'])
         script_file = open(USER_SCRIPT_FOLDER+str(user_object_id)+"/"+str(object_id)+".py", 'r')
         processed_template = "".join(script_file.readlines())
-        session['pass_rate'] = 0 if session['pass_rate']==-1 else session['pass_rate']
     print("pass rate should be printed:",session['pass_rate'] )
     print("code blocked", session['blocked'])
     return render_template('task.html', task=task, script_template = processed_template, script_blocked=session['blocked'],\
-        pass_rate=session['pass_rate'], error=session['error'], blocked_scripts=', '.join(BLOCKED_SCRIPTS))
+        pass_rate=session['pass_rate'], error=session['error'], blocked_scripts=', '.join(BLOCKED_SCRIPTS),\
+            sample_input_list=session['sample_input_list'], sample_output=session['sample_output'], user_output=session['user_output'])
 
 @app.route('/submit', methods=['GET', 'POST'])
 @flask_login.login_required
 def submit():
     code_lines = request.form['code']
     task_title = request.form['task_tit']
-    print("focus:",code_lines)
-    if not is_ascii(code_lines):
+    print("waht:", code_lines)
+    print("focus:", type(code_lines))
+    if  [True for item in BLOCKED_SCRIPTS if item in str(code_lines)]:
         session['blocked'] = True
-        print("inside ascii")
+        print("unicode or blocked scripts entered!:", session['blocked'])
         return redirect(url_for('task', task_title=task_title))
-    print('ss:', str(code_lines))
-    if [True for item in BLOCKED_SCRIPTS if item in str(code_lines)]:
-        session['blocked'] = True
-        return redirect(url_for('task', task_title=task_title))
+    else:
+        session['blocked'] = False
     object_id = list(db.tasks.find({"title":request.form['task_tit']}))[0].get('_id')
     user_object_id = list(db.users.find({"email":session['email']}))[0].get('_id')
     if not os.path.exists(USER_SCRIPT_FOLDER+str(user_object_id)):
@@ -110,7 +149,16 @@ def submit():
     script_file_obj = open(user_script_file, 'w+')
     script_file_obj.write(code_lines)
     script_file_obj = open(user_script_file, 'r')
-    pass_rate, error, total_count = execute_logic(object_id)
+    if str(request.form['test_run']) == 'true':
+        sample_input_list, sample_output, user_output, pass_rate, error, total_count = execute_sample_logic(object_id)
+        session['sample_input_list'] = sample_input_list
+        session['sample_output'] = sample_output
+        session['user_output'] = user_output
+    else:
+        pass_rate, error, total_count = execute_logic(object_id)
+        session['sample_input_list'] = ""
+        session['sample_output'] = ""
+        session['user_output'] = ""
     session['pass_rate'] = pass_rate/total_count*100
     print("pass_count:", pass_rate)
     print("total_cnt:", total_count)
@@ -118,10 +166,32 @@ def submit():
     if error:
         error = error.split(',')
         session['error'] = ''.join(error[1:])
+    else:
+        session['error'] = ""
     return redirect(url_for('task', task_title=task_title))
 
+def execute_sample_logic(object_id):
+    user_object_id = list(db.users.find({"email":session['email']}))[0].get('_id')
+    user_script_file = USER_SCRIPT_FOLDER+str(user_object_id)+"/"+str(object_id)+".py"
+    test_ip_op_dict = list(db.tasks.find({"_id":object_id}))[0]
+    pass_count = 0
+    total_count = 1
+    process = subprocess.Popen("python "+user_script_file, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    test_input = '\n'.join(test_ip_op_dict['test_ip_op']['test1']['input'])
+    print('test_ip_sample:', str(test_input))
+    test_output = test_ip_op_dict['test_ip_op']['test1']['output']
+    print('test_op_sample:',str(test_output))
+    process.stdin.write(test_input)
+    output, error = process.communicate()
+    if str(test_output) == output.strip():
+        pass_count+=1
+    print("script_output:", output.strip())
+    print("script_error:", error)
+    return test_ip_op_dict['test_ip_op']['test1']['input'], str(test_output), output.strip(), pass_count, error, total_count
+
 def execute_logic(object_id):
-    user_script_file = USER_SCRIPT_FOLDER+session['email']+"/"+str(object_id)+".py"
+    user_object_id = list(db.users.find({"email":session['email']}))[0].get('_id')
+    user_script_file = USER_SCRIPT_FOLDER+str(user_object_id)+"/"+str(object_id)+".py"
     test_ip_op_dict = list(db.tasks.find({"_id":object_id}))[0]
     pass_count = 0
     total_count = len(test_ip_op_dict['test_ip_op'].values())
@@ -190,6 +260,7 @@ def validate():
 @app.route('/logout', methods=['GET', 'POST'])
 @flask_login.login_required
 def logout():
+    session['admin_try'] = False
     flask_login.logout_user()
     session.clear()
     return redirect(url_for('index'))

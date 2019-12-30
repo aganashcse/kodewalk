@@ -19,8 +19,12 @@
 			<li class="breadcrumb-item" aria-current="page">Login</li>
 		</ol>
     </nav>
-    <div class="panel-body" style="width: 35%; margin-left: auto; margin-right: auto;">
-        <form role="form" method="POST" action="/login">
+    <div class="panel-body" style="width: 35%; margin-left: auto; margin-right: auto;"><br/><br/><br/>
+        {% if session['admin_try'] %}
+        <form role="form" method="POST" action="/admin">
+            {% else %}
+            <form role="form" method="POST" action="/login">
+                {% endif %}
             <fieldset>
                 <div class="form-group">
                     <input class="form-control" placeholder="E-mail" name="email" type="email" autofocus required>
@@ -28,14 +32,18 @@
                 <div class="form-group">
                     <input class="form-control" placeholder="Password" name="passwd" type="password" value="" required>
                 </div>
+                {% if not session['admin_try'] %}
                 <div class="checkbox">
                     <label>
                         <input name="remember" type="checkbox" value="Remember Me">Remember Me
                     </label>
                 </div>
+                {% endif %}
                 <button class="btn btn-lg btn-success btn-block" type="submit">Login</button>
                 <br/>
+                {% if not session['admin_try'] %}
                 <p><a href="/register" ><strong>click here</strong></a> to register, If you are new here!</p>
+                {% endif %}
                 <br/>
                 <p style="color: red;">{{ msg }}
                 </p>

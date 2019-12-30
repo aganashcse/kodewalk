@@ -67,21 +67,33 @@
                             </textarea>-->
                             <input type="hidden" id="script_template" name="script_template" value="{{script_template}}">
                             <input type="hidden" id="task_tit" name="task_tit" value="{{task['title']}}"/>
+                            <input type="hidden" id="test_run" name="test_run" value="false"/>
                           </div>
-                          <textarea class="codemirror-textarea" name="code" id="code" onKeyUp='check_ascii(this)'></textarea>
+                          <textarea class="codemirror-textarea" name="code" id="code"></textarea>
                         </fieldset>
                     <fieldset>
                         <div class="row form-group">
-                            <div class="column" style="float: left; width: 85%;"></div>
-                            <div class="column" style="float: right; width: 10%;">
-                                <!--<a href="#" class="btn btn-banner my-sm-3" style="margin-right: 0px; color: black;">Run code</a>-->
-                                <a href="javascript:void()" onclick="document.getElementById('submit_form').submit();" class="btn btn-banner1 my-sm-3" style="float: right; padding: 2px;">Submit code</a>
+                            <div class="col-sm-4"></div>
+                            <div class="col-sm-4">
+                                <a href="javascript:void()" onclick="test_run_code()" class="btn btn-banner my-sm-3" style="color: black; padding: 4px; float: right;">Run code</a>
+                            </div>
+                            <div class="col-sm-4" style="float: right;">
+                                <a href="javascript:void()" onclick="document.getElementById('submit_form').submit();" class="btn btn-banner1 my-sm-3" style="padding: 2px;">Submit code</a>
                             </div>
                     </div>
                     
                 </fieldset>
             </form>
             <div class="progress-one my-lg-4">
+                {% if script_blocked %}
+                    <div class="col-18 mt-lg-10 grid">
+                            <h3 style="color: red;">Warning!! :-(</h3>
+                            </div>
+                    <div class="col-18 mt-lg-10 grid">
+                        <h6 style="color: red;">Please don't use {{blocked_scripts}} keywords and non-ASCII keywords!</h6>
+                        <p class="mt-2">The above keywords are blocked. Please crack the logic without using them.</p>
+                    </div>
+                    {% else %}
                     {% if error %}
                     <div class="col-18 mt-lg-10 grid">
                             <h3 style="color: red;">Error! :-(</h3>
@@ -91,7 +103,25 @@
                         <p class="mt-2">Please debug the issue and re-submit</p>
                     </div>
                     {% else %}
-                    {% if pass_rate==100 %}
+                    {% if user_output %}
+                    <div class="col-18 mt-lg-10 grid">
+                            <h3 style="color: green;">Sample test result:</h3>
+                            </div>
+                    <div class="col-18 mt-lg-10 grid">
+                        <h6 style="color: green;">Test input:<br/>
+                        {% for input in sample_input_list %}
+                        {{input}}<br/>
+                        {% endfor %}
+                        </h6>
+                    </div>
+                    <div class="col-18 mt-lg-10 grid">
+                        <h6 style="color: green;">Test ouput: {{sample_output}}</h6>
+                    </div>
+                    <div class="col-18 mt-lg-10 grid">
+                        <h6 style="color: green;">Your code's output: {{user_output}}</h6>
+                    </div>
+                    {% else %}
+                    {% if pass_rate|float == 100 %}
                     <div class="col-18 mt-lg-10 grid">
                             <h3 style="color: green;">Passed! :-)</h3><br/>
                             </div>
@@ -109,7 +139,7 @@
                         <p class="mt-2">Please check your logic and try again.</p>
                     </div>
                         {% endif %}
-                        {% if (pass_rate|float == 0) %}
+                        {% if (pass_rate == 0) %}
                     <div class="col-18 mt-lg-10 grid">
                             <h3 style="color: rgb(205, 81, 50);">Something not right! :-(</h3><br/>
                             </div>
@@ -119,14 +149,7 @@
                     </div>
                         {% endif %}
                     {% endif %}
-                    {% if script_blocked %}
-                    <div class="col-18 mt-lg-10 grid">
-                            <h3 style="color: red;">Warning!! :-(</h3>
-                            </div>
-                    <div class="col-18 mt-lg-10 grid">
-                        <h6 style="color: red;">Please don't use {{blocked_scripts}} keywords and non-ASCII keywords!</h6>
-                        <p class="mt-2">The above keywords are blocked. Please crack the logic without using them.</p>
-                    </div>
+                    {% endif %}
                     {% endif %}
                     </div>
                 </div>
