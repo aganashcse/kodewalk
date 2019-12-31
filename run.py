@@ -26,7 +26,7 @@ mail = Mail(app)
 otp = randint(000000,999999)
 SCRIPT_TEMPLATE_FOLDER = os.path.dirname(os.path.abspath(__file__)) + '/script_templates/'
 USER_SCRIPT_FOLDER = os.path.dirname(os.path.abspath(__file__)) + '/scripts/'
-BLOCKED_SCRIPTS = ['import', 'eval', 'from', 'exec']
+BLOCKED_SCRIPTS = ['import', 'eval', 'from', 'exec', 'open']
 
 class User(flask_login.UserMixin):
     pass
@@ -133,21 +133,28 @@ def task(task_title):
 def submit():
     code_lines = request.form['code']
     task_title = request.form['task_tit']
-    print("waht:", code_lines)
-    print("focus:", type(code_lines))
-    if  [True for item in BLOCKED_SCRIPTS if item in str(code_lines)]:
-        session['blocked'] = True
-        print("unicode or blocked scripts entered!:", session['blocked'])
-        return redirect(url_for('task', task_title=task_title))
-    else:
-        session['blocked'] = False
+    code_lines = code_lines.replace('    ', '\t')
     object_id = list(db.tasks.find({"title":request.form['task_tit']}))[0].get('_id')
     user_object_id = list(db.users.find({"email":session['email']}))[0].get('_id')
     if not os.path.exists(USER_SCRIPT_FOLDER+str(user_object_id)):
         os.mkdir(USER_SCRIPT_FOLDER+str(user_object_id))
     user_script_file = USER_SCRIPT_FOLDER+str(user_object_id)+"/"+str(object_id)+".py"
     script_file_obj = open(user_script_file, 'w+')
-    script_file_obj.write(code_lines)
+    script_file_obj.write(str(code_lines))
+    #handling unicode character below
+    try:
+        print("user_code b4 processing:",str(code_lines))
+    except:
+        session['blocked'] = True
+        print("unicode or blocked scripts entered!:", session['blocked'])
+        return redirect(url_for('task', task_title=task_title))
+    print("user_code after processing:", str(code_lines))
+    if  [True for item in BLOCKED_SCRIPTS if item in str(code_lines)]:
+        session['blocked'] = True
+        print("unicode or blocked scripts entered!:", session['blocked'])
+        return redirect(url_for('task', task_title=task_title))
+    else:
+        session['blocked'] = False
     script_file_obj = open(user_script_file, 'r')
     if str(request.form['test_run']) == 'true':
         sample_input_list, sample_output, user_output, pass_rate, error, total_count = execute_sample_logic(object_id)
@@ -164,7 +171,7 @@ def submit():
     print("total_cnt:", total_count)
     print("pass_rate:", session['pass_rate'])
     if error:
-        error = error.split(',')
+        error = error.replace(user_script_file, "your script file")
         session['error'] = ''.join(error[1:])
     else:
         session['error'] = ""
