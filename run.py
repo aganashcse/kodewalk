@@ -8,6 +8,8 @@ import subprocess
 import flask_login
 import pdb
 import os
+import time
+import threading
 
 app = Flask(__name__)
 app.config["MAIL_SERVER"]='smtp.gmail.com'  
@@ -120,11 +122,11 @@ def task(task_title):
     user_object_id = list(db.users.find({"email":session['email']}))[0].get('_id')
     if os.path.isfile(USER_SCRIPT_FOLDER+str(user_object_id)+"/"+str(object_id)+".py"):
         print("User script already exists, pass_rate:", session['pass_rate'])
-        script_file = open(USER_SCRIPT_FOLDER+str(user_object_id)+"/"+str(object_id)+".py", 'r')
-        processed_template = "".join(script_file.readlines())
+        user_script_file = open(USER_SCRIPT_FOLDER+str(user_object_id)+"/"+str(object_id)+".py", 'r')
+        processed_template = "".join(user_script_file.readlines())
     print("pass rate should be printed:",session['pass_rate'] )
     print("code blocked", session['blocked'])
-    return render_template('task.html', task=task, script_template = processed_template, script_blocked=session['blocked'],\
+    return render_template('task.html', task=task, script_template = processed_template.decode("utf-8"), script_blocked=session['blocked'],\
         pass_rate=session['pass_rate'], error=session['error'], blocked_scripts=', '.join(BLOCKED_SCRIPTS),\
             sample_input_list=session['sample_input_list'], sample_output=session['sample_output'], user_output=session['user_output'])
 
@@ -140,7 +142,7 @@ def submit():
         os.mkdir(USER_SCRIPT_FOLDER+str(user_object_id))
     user_script_file = USER_SCRIPT_FOLDER+str(user_object_id)+"/"+str(object_id)+".py"
     script_file_obj = open(user_script_file, 'w+')
-    script_file_obj.write(str(code_lines))
+    script_file_obj.write(code_lines.encode('utf-8'))
     #handling unicode character below
     try:
         print("user_code b4 processing:",str(code_lines))
@@ -172,7 +174,7 @@ def submit():
     print("pass_rate:", session['pass_rate'])
     if error:
         error = error.replace(user_script_file, "your script file")
-        session['error'] = ''.join(error[1:])
+        session['error'] = error
     else:
         session['error'] = ""
     return redirect(url_for('task', task_title=task_title))
@@ -189,7 +191,11 @@ def execute_sample_logic(object_id):
     test_output = test_ip_op_dict['test_ip_op']['test1']['output']
     print('test_op_sample:',str(test_output))
     process.stdin.write(test_input)
-    output, error = process.communicate()
+    try:
+        output, error = process.communicate()
+    except Exception as e:
+        print("Process takes longer time than usual\nException:",e)
+        process.kill()
     if str(test_output) == output.strip():
         pass_count+=1
     print("script_output:", output.strip())
@@ -209,7 +215,11 @@ def execute_logic(object_id):
         test_output = test_ip_op['output']
         print('test_op:',str(test_output))
         process.stdin.write(test_input)
-        output, error = process.communicate()
+        try:
+            output, error = process.communicate(timeout=2)
+        except subprocess.TimeoutExpired:
+            print("Process takes longer time than usual")
+            process.kill()
         if str(test_output) == output.strip():
             pass_count+=1
         print("script_output:", output.strip())
