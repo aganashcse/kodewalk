@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from __future__ import division
 from flask import Flask, render_template, request, session, redirect, url_for
 from pymongo import MongoClient
@@ -228,6 +229,7 @@ def execute_logic(object_id):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    session['admin_try'] = False
     if request.method=='GET':
         return render_template('login.html')
     session['email']=request.form['email']
@@ -255,8 +257,8 @@ def register():
             #handling if user(s) already exists
             for _ in db.users.find(email_dict):
                 return render_template('register.html', msg = 'Email already used!!!')
-            msg = Message('LikeBuds Account Verification', sender = app.config["MAIL_USERNAME"], recipients = [session['email']])  
-            msg.body = str(otp)  
+            msg = Message('kodeWalk Account Verification', sender = app.config["MAIL_USERNAME"], recipients = [session['email']])  
+            msg.body = "Welcome to KodeWalk - a code learning platform!\nPlease use "+str(otp)+" as otp for KodeWalk account verification"  
             mail.send(msg)
             return redirect(url_for('validate'))
         else:
