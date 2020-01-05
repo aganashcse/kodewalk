@@ -40,8 +40,8 @@
 			<ul class="menu ml-auto mt-1">
 				<!--<li class=""><a href="#">Services</a></li>-->
 				<li class="last-grid"><a href="#" id="contact_modal_btn">Contact</a></li>
-                    {% if current_user.is_authenticated %}
-                    <li class="last-grid dropdown">
+                {% if current_user.is_authenticated %}
+                <li class="last-grid dropdown">
                         <a href="/logout" role="button" aria-expanded="false"><span class="caret">Logout</span></a>
                         <!--<ul class="dropdown-menu" role="menu" style="margin-right: auto;">
                                 <li><a class="li-in-li" href="/logout"></a></li>

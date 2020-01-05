@@ -12,6 +12,10 @@ import os
 import time
 import threading
 
+from helpers.helper import Db_helper
+from helpers.helper import File_helper
+from helpers.helper import Code_processor
+
 app = Flask(__name__)
 app.config["MAIL_SERVER"]='smtp.gmail.com'  
 app.config["MAIL_PORT"] = 465     
@@ -22,6 +26,9 @@ app.config['MAIL_USE_SSL'] = True
 
 client = MongoClient('mongodb://localhost:27017/')
 db = client.kodewalk
+db_helper = Db_helper(db)
+file_helper = File_helper(db)
+code_processor = Code_processor()
 login_manager = flask_login.LoginManager()
 login_manager.init_app(app)
 user = ''
@@ -48,6 +55,8 @@ def before_request_callback():
     session['sample_input_list'] = session.get('sample_input_list', "")
     session['sample_output'] = session.get('sample_output', "")
     session['user_output'] = session.get('user_output', "")
+    session['curr_try'] = session.get('curr_try', 1)
+    session['local_run'] = session.get('local_run', False)
 
 @app.after_request
 def after_request_func(response):
@@ -115,21 +124,25 @@ def python():
 @app.route('/task/<string:task_title>', methods=['GET', 'POST'])
 @flask_login.login_required
 def task(task_title):
-    task = list(db.tasks.find({"title":task_title}))[0]
-    print('title:', task_title)
-    script_template_file = open(SCRIPT_TEMPLATE_FOLDER + str(task['_id']) + '.py', 'r')
-    processed_template = "".join(script_template_file.readlines())
-    object_id = list(db.tasks.find({"title":task_title}))[0].get('_id')
-    user_object_id = list(db.users.find({"email":session['email']}))[0].get('_id')
-    if os.path.isfile(USER_SCRIPT_FOLDER+str(user_object_id)+"/"+str(object_id)+".py"):
-        print("User script already exists, pass_rate:", session['pass_rate'])
-        user_script_file = open(USER_SCRIPT_FOLDER+str(user_object_id)+"/"+str(object_id)+".py", 'r')
-        processed_template = "".join(user_script_file.readlines())
-    print("pass rate should be printed:",session['pass_rate'] )
-    print("code blocked", session['blocked'])
-    return render_template('task.html', task=task, script_template = processed_template.decode("utf-8"), script_blocked=session['blocked'],\
-        pass_rate=session['pass_rate'], error=session['error'], blocked_scripts=', '.join(BLOCKED_SCRIPTS),\
-            sample_input_list=session['sample_input_list'], sample_output=session['sample_output'], user_output=session['user_output'])
+    task_dict = db_helper.find_doc_from_db(query_dict = {"title":task_title}, collection= 'tasks')
+    task_object_id = db_helper.get_id_of_doc_from_db(query_dict={"title":task_title}, collection= 'tasks')
+    user_object_id = db_helper.get_id_of_doc_from_db(query_dict={"email":session['email']}, collection = "users")
+    if file_helper.is_user_script_exists(user_folder=user_object_id, script_file_name=task_object_id, local_run=session['local_run']):
+        if session['local_run']:
+            processed_code = file_helper.read_user_script(user_folder=user_object_id, script_file_name=task_object_id, local_run=True)
+        else:
+            processed_code = file_helper.read_user_script(user_folder=user_object_id, script_file_name=task_object_id)
+    else:
+        processed_code = file_helper.read_template_script(script_file_name=task_object_id)
+        print("Template script loaded! User doesn't have any")
+        print("pass rate should be printed:",session['pass_rate'])
+        print("code blocked", session['blocked'])
+    user_tries_list = db_helper.get_user_tries_list(user_object_id=user_object_id, task_object_id=task_object_id, collection = "points")
+    print("user_tries_list:{}".format(user_tries_list))
+    return render_template('task.html', task=task_dict, script_template = processed_code.decode("utf-8"), script_blocked=session['blocked'],\
+         pass_rate=session['pass_rate'], error=session['error'], blocked_scripts=', '.join(BLOCKED_SCRIPTS),\
+             sample_input_list=session['sample_input_list'], sample_output=session['sample_output'], user_output=session['user_output'],\
+                 user_tries_list=user_tries_list)
 
 @app.route('/submit', methods=['GET', 'POST'])
 @flask_login.login_required
@@ -137,53 +150,48 @@ def submit():
     code_lines = request.form['code']
     task_title = request.form['task_tit']
     code_lines = code_lines.replace('    ', '\t')
-    object_id = list(db.tasks.find({"title":request.form['task_tit']}))[0].get('_id')
-    user_object_id = list(db.users.find({"email":session['email']}))[0].get('_id')
+    task_object_id = db_helper.get_id_of_doc_from_db(query_dict={"title":request.form['task_tit']}, collection="tasks")
+    user_object_id = db_helper.get_id_of_doc_from_db(query_dict={"email":session['email']}, collection = "users")
     if not os.path.exists(USER_SCRIPT_FOLDER+str(user_object_id)):
         os.mkdir(USER_SCRIPT_FOLDER+str(user_object_id))
-    user_script_file = USER_SCRIPT_FOLDER+str(user_object_id)+"/"+str(object_id)+".py"
-    script_file_obj = open(user_script_file, 'w+')
-    script_file_obj.write(code_lines.encode('utf-8'))
+    if str(request.form['test_run']) == 'true':
+        session['curr_try']=file_helper.write_user_script(user_folder= user_object_id, script_file_name=task_object_id, content=code_lines.encode('utf-8'), local_run=True)
+    else:
+        session['curr_try']=file_helper.write_user_script(user_folder= user_object_id, script_file_name=task_object_id, content=code_lines.encode('utf-8'))
     #handling unicode character below
-    try:
-        print("user_code b4 processing:",str(code_lines))
-    except:
+    if code_processor.precheck_code_errors(code = code_lines):
         session['blocked'] = True
-        print("unicode or blocked scripts entered!:", session['blocked'])
-        return redirect(url_for('task', task_title=task_title))
-    print("user_code after processing:", str(code_lines))
-    if  [True for item in BLOCKED_SCRIPTS if item in str(code_lines)]:
-        session['blocked'] = True
-        print("unicode or blocked scripts entered!:", session['blocked'])
         return redirect(url_for('task', task_title=task_title))
     else:
         session['blocked'] = False
-    script_file_obj = open(user_script_file, 'r')
     if str(request.form['test_run']) == 'true':
-        sample_input_list, sample_output, user_output, pass_rate, error, total_count = execute_sample_logic(object_id)
+        sample_input_list, sample_output, user_output, pass_rate, error, total_count = execute_sample_logic(task_object_id)
         session['sample_input_list'] = sample_input_list
         session['sample_output'] = sample_output
         session['user_output'] = user_output
+        session['local_run'] = True
     else:
-        pass_rate, error, total_count = execute_logic(object_id)
+        pass_rate, error, total_count = execute_logic(task_object_id)
         session['sample_input_list'] = ""
         session['sample_output'] = ""
         session['user_output'] = ""
+        session['local_run'] = False
+        db_helper.save_score_db(user_object_id=user_object_id, task_object_id=task_object_id, score=round((pass_rate/total_count*100), 2), curr_try= session['curr_try'])
     session['pass_rate'] = pass_rate/total_count*100
     print("pass_count:", pass_rate)
     print("total_cnt:", total_count)
     print("pass_rate:", session['pass_rate'])
+    print("curr_try:", session['curr_try'])
     if error:
-        error = error.replace(user_script_file, "your script file")
-        session['error'] = error
+        session['error'] = code_processor.postcheck_code_errors(error=error, user_folder= user_object_id, script_file_name=task_object_id, local_run=session['local_run'])
     else:
         session['error'] = ""
     return redirect(url_for('task', task_title=task_title))
 
-def execute_sample_logic(object_id):
-    user_object_id = list(db.users.find({"email":session['email']}))[0].get('_id')
-    user_script_file = USER_SCRIPT_FOLDER+str(user_object_id)+"/"+str(object_id)+".py"
-    test_ip_op_dict = list(db.tasks.find({"_id":object_id}))[0]
+def execute_sample_logic(task_object_id):
+    user_object_id = db_helper.get_id_of_doc_from_db(query_dict={"email":session['email']}, collection = "users")
+    user_script_file = USER_SCRIPT_FOLDER+str(user_object_id)+"/"+str(task_object_id)+".py"
+    test_ip_op_dict = list(db.tasks.find({"_id":task_object_id}))[0]
     pass_count = 0
     total_count = 1
     process = subprocess.Popen("python "+user_script_file, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
@@ -199,14 +207,14 @@ def execute_sample_logic(object_id):
         process.kill()
     if str(test_output) == output.strip():
         pass_count+=1
-    print("script_output:", output.strip())
-    print("script_error:", error)
+    print("sample_script_output:", output.strip())
+    print("sample_script_error:", error)
     return test_ip_op_dict['test_ip_op']['test1']['input'], str(test_output), output.strip(), pass_count, error, total_count
 
-def execute_logic(object_id):
-    user_object_id = list(db.users.find({"email":session['email']}))[0].get('_id')
-    user_script_file = USER_SCRIPT_FOLDER+str(user_object_id)+"/"+str(object_id)+".py"
-    test_ip_op_dict = list(db.tasks.find({"_id":object_id}))[0]
+def execute_logic(task_object_id):
+    user_object_id = db_helper.get_id_of_doc_from_db(query_dict={"email":session['email']}, collection = "users")
+    user_script_file = USER_SCRIPT_FOLDER+str(user_object_id)+"/"+str(task_object_id)+"_submission.py"
+    test_ip_op_dict = list(db.tasks.find({"_id":task_object_id}))[0]
     pass_count = 0
     total_count = len(test_ip_op_dict['test_ip_op'].values())
     for test_ip_op in test_ip_op_dict['test_ip_op'].values():
@@ -217,7 +225,7 @@ def execute_logic(object_id):
         print('test_op:',str(test_output))
         process.stdin.write(test_input)
         try:
-            output, error = process.communicate(timeout=2)
+            output, error = process.communicate()
         except subprocess.TimeoutExpired:
             print("Process takes longer time than usual")
             process.kill()

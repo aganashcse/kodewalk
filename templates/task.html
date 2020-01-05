@@ -158,10 +158,13 @@
                     <br/>
                     <h4 style="padding: 10px;">Submissions:</h4>
                         <ul class="list-group">
-                                <li class="list-group-item sub-meta"><a href="" onclick="not_developed_alert()" style="display: block;">
-                                    Try1
-                                    <span style="float: right;">08:01:00</span></a>
+                            {% for user_try_dict in user_tries_list %}
+                                <li class="list-group-item sub-meta">
+                                    <a href="" onclick="not_developed_alert()" style="display: block;">
+                                    Try:{{user_try_dict['try']}}
+                                    <span style="float: right;">Score: {{user_try_dict['score']}}</span></a>
                                 </li>
+                                {% endfor %}
                               </ul>
                 </div>
                 </div>
